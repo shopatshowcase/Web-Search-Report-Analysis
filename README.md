@@ -36,11 +36,11 @@ All steps include Google Chat notifications for monitoring progress and status.
 ## Installation
 
 ### 1. Clone/Download Repository
-Place this `automation` folder in your working directory.
+Place this repository in your working directory.
 
 ### 2. Install Python Dependencies
 
-Open PowerShell or Command Prompt in the `automation` folder and run:
+Open PowerShell or Command Prompt in the project folder and run:
 
 ```bash
 pip install -r requirements.txt
@@ -56,7 +56,7 @@ This installs:
 
 ### 3. Configure Environment Variables
 
-Create a `.env` file in the `automation` folder with the following:
+Create a `.env` file in the project root folder with the following:
 
 ```env
 # OpenAI Configuration
@@ -80,13 +80,13 @@ BATCH_WORKERS=1
 Simply execute the batch file:
 
 ```bash
-automation\run_weekly_pipeline.bat
+run_weekly_pipeline.bat
 ```
 
-Or from within the automation folder:
+Or with full path:
 
 ```bash
-run_weekly_pipeline.bat
+"Web Search Report Analysis\run_weekly_pipeline.bat"
 ```
 
 The pipeline will:
@@ -141,12 +141,12 @@ python push_merged_items.py --input "data\merged\merged_last_monday_2026-01-13.x
 ## Folder Structure
 
 ```
-automation/
+Web Search Report Analysis/
 ├── run_weekly_pipeline.bat         # Main orchestrator script
 ├── requirements.txt                # Python dependencies
 ├── .env                            # Environment variables (create this!)
 ├── README.md                       # This file
-├── Automation_Pipeline_Overview.docx  # Detailed documentation
+├── Automation_Pipeline_Documentation.docx  # Detailed documentation
 │
 ├── Python Scripts
 ├── pull_and_filter_last_monday.py  # Step 1: Pull & filter
@@ -270,8 +270,8 @@ To run automatically every Monday:
 2. Create Basic Task → Name: "Weekly Keywords Processing"
 3. Trigger: **Weekly** → Every Monday at your preferred time
 4. Action: **Start a program**
-   - Program: `C:\Users\YourUser\Desktop\...\automation\run_weekly_pipeline.bat`
-   - Start in: `C:\Users\YourUser\Desktop\...\automation\`
+   - Program: `C:\Users\YourUser\Desktop\...\Web Search Report Analysis\run_weekly_pipeline.bat`
+   - Start in: `C:\Users\YourUser\Desktop\...\Web Search Report Analysis\`
 5. Save and test
 
 ---
@@ -299,7 +299,7 @@ If you need to modify how assistants process data:
 - Keep `.env` file secure and never commit to Git
 - Add `.env` to `.gitignore`
 - Rotate API keys periodically
-- Restrict access to the `automation` folder
+- Restrict access to the project folder
 - Consider encrypting sensitive configuration files
 
 ---
