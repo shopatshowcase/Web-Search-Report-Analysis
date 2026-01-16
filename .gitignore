@@ -1,0 +1,23 @@
+# Environment variables (contains API keys!)
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Data folders (don't commit large data files)
+data/
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Ignore all Word documents
+*.docx
