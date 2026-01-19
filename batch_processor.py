@@ -78,6 +78,11 @@ def process_files(
     # If custom output summary file is specified, save it
     if output_summary_file and results:
         import json
+        import os
+        # Create directory if it doesn't exist
+        output_dir_path = os.path.dirname(output_summary_file)
+        if output_dir_path:
+            os.makedirs(output_dir_path, exist_ok=True)
         with open(output_summary_file, 'w', encoding='utf-8') as f:
             json.dump(results, f, indent=2, ensure_ascii=False)
         logger.info(f"Custom batch summary saved to {output_summary_file}")
