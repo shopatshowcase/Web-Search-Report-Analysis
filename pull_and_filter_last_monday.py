@@ -15,7 +15,7 @@ import argparse
 import sys
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 import pandas as pd
 import requests
@@ -37,7 +37,7 @@ def _normalize_col(col: str) -> str:
     return "".join(str(col).strip().lower().split())
 
 
-def _resolve_column(df: pd.DataFrame, preferred: str, candidates: list[str]) -> Optional[str]:
+def _resolve_column(df: pd.DataFrame, preferred: str, candidates: List[str]) -> Optional[str]:
     normalized = {_normalize_col(c): c for c in df.columns.tolist()}
     for cand in [preferred] + candidates:
         key = _normalize_col(cand)

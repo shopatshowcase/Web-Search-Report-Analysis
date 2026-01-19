@@ -7,7 +7,7 @@ import os
 import glob
 from pathlib import Path
 from openai_service import OpenAIService
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from config import BATCH_WORKERS
 
@@ -225,7 +225,7 @@ class AssistantIntegration:
         logger.info(f"Found {len(excel_files)} Excel file(s) to process")
         logger.info("=" * 80)
         
-        def _process_one(index_and_path: tuple[int, str]) -> dict:
+        def _process_one(index_and_path: Tuple[int, str]) -> Dict:
             idx, file_path = index_and_path
             filename = os.path.basename(file_path)
             logger.info(f"\n{'=' * 80}")
@@ -269,7 +269,7 @@ class AssistantIntegration:
         else:
             logger.info(f"Running batch with parallel workers: {workers}")
             # Keep output order stable (same as excel_files order)
-            ordered_results: list[Optional[dict]] = [None] * len(excel_files)
+            ordered_results: List[Optional[Dict]] = [None] * len(excel_files)
             with ThreadPoolExecutor(max_workers=workers) as executor:
                 future_to_index = {
                     executor.submit(_process_one, (i, fp)): (i, fp)
