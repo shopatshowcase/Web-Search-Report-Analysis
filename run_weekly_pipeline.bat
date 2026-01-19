@@ -4,8 +4,8 @@ setlocal enabledelayedexpansion
 rem Resolve automation directory (this .bat location)
 set "AUTOMATION_DIR=%~dp0"
 
-rem Calculate last Monday date (YYYY-MM-DD)
-for /f %%i in ('powershell -NoProfile -Command "$d=Get-Date; $m=$d.AddDays(-((([int]$d.DayOfWeek+6)%%7))); $m.ToString('yyyy-MM-dd')"') do set "RUN_DATE=%%i"
+rem Calculate last Monday date (YYYY-MM-DD) - always previous week's Monday
+for /f %%i in ('powershell -NoProfile -Command "$d=Get-Date; $days=(([int]$d.DayOfWeek+6)%%7); if($days -eq 0){$days=7}; $m=$d.AddDays(-$days); $m.ToString('yyyy-MM-dd')"') do set "RUN_DATE=%%i"
 
 rem Define dated paths
 set "INPUT_FILE=%AUTOMATION_DIR%data\input\%RUN_DATE%\keywords_last_monday_%RUN_DATE%.xlsx"

@@ -48,10 +48,15 @@ def _resolve_column(df: pd.DataFrame, preferred: str, candidates: list[str]) -> 
 
 def last_monday(today: Optional[date] = None) -> date:
     """
-    Return the date of the most recent Monday (including today if today is Monday).
+    Return the date of last week's Monday (excluding today even if today is Monday).
     """
     today = today or date.today()
-    return today - timedelta(days=today.weekday())
+    days_since_monday = today.weekday()
+    # If today is Monday (weekday = 0), go back 7 days to get last week's Monday
+    if days_since_monday == 0:
+        return today - timedelta(days=7)
+    else:
+        return today - timedelta(days=days_since_monday)
 
 
 def pull_keywords(url: str, timeout_seconds: int = 120) -> pd.DataFrame:
