@@ -23,7 +23,7 @@ python "%AUTOMATION_DIR%pull_and_filter_last_monday.py"
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 rem 2) Split input
-python "%AUTOMATION_DIR%split_input_excel.py" --input "%INPUT_FILE%" --output-dir "%SPLIT_DIR%"
+python "%AUTOMATION_DIR%split_input_excel.py" --input "%INPUT_FILE%" --output-dir "%SPLIT_DIR%" --chunk-size 5
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 rem 3) Assistant 1 (use dated folders)
