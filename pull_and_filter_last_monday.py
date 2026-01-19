@@ -6,7 +6,7 @@ last-Monday filter into a single run.
 
 Usage:
   python pull_and_filter_last_monday.py
-  python pull_and_filter_last_monday.py --output "C:\path\keywords_last_monday.xlsx"
+  python pull_and_filter_last_monday.py --output "C:/path/keywords_last_monday.xlsx"
   python pull_and_filter_last_monday.py --url "https://host/api/ws/keywords"
 """
 from __future__ import annotations
@@ -104,6 +104,10 @@ def pull_and_filter_last_monday(
             f"[ERROR] No rows found for last Monday ({target_date}). "
             f"Check the {date_col} values in the API response."
         )
+
+    # Drop the DDate column as it's only needed for filtering, not for processing
+    if date_col in filtered.columns:
+        filtered = filtered.drop(columns=[date_col])
 
     default_dir = SCRIPT_DIR / "data" / "input" / target_date.strftime("%Y-%m-%d")
 
