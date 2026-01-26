@@ -35,6 +35,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DEFAULT_BASE_URL = "https://192.168.80.74"
 DEFAULT_ENDPOINT = "/api/ws/items"
+DEFAULT_RUNUPDATE_ENDPOINT = "/api/ws/runupdate"
 TARGET_COLUMNS: Tuple[str, str, str] = ("keyword", "U_line", "Item")
 
 
@@ -137,6 +138,7 @@ def push_items_from_excel(
     excel_path: str,
     base_url: str = DEFAULT_BASE_URL,
     endpoint: str = DEFAULT_ENDPOINT,
+    runupdate_endpoint: str = DEFAULT_RUNUPDATE_ENDPOINT,
     sheet: str | int | None = None,
     batch_size: int = 300,
     timeout_seconds: int = 120,
@@ -152,6 +154,7 @@ def push_items_from_excel(
         raise SystemExit(f"[ERROR] Excel file not found: {path}")
 
     url = base_url.rstrip("/") + endpoint
+    runupdate_url = base_url.rstrip("/") + runupdate_endpoint
     print("=" * 80)
     print("WS Items Bulk Uploader")
     print("=" * 80)
@@ -290,6 +293,22 @@ def push_items_from_excel(
     print(f"Total sent rows: {len(rows)}")
     print(f"API received total: {received_total}")
     print(f"API inserted total: {inserted_total}")
+    print("-" * 80)
+    print(f"Triggering runupdate: {runupdate_url}")
+    try:
+        runupdate_resp = session.put(
+            runupdate_url, headers=headers, verify=False, timeout=timeout_seconds
+        )
+    except requests.exceptions.RequestException as e:
+        raise SystemExit(f"[ERROR] Runupdate request failed after retries: {e}")
+
+    if runupdate_resp.status_code >= 400:
+        body_preview = (runupdate_resp.text or "")[:1000]
+        raise SystemExit(
+            f"[ERROR] Runupdate HTTP {runupdate_resp.status_code}\n"
+            f"Response preview:\n{body_preview}"
+        )
+    print(f"[SUCCESS] Runupdate triggered (HTTP {runupdate_resp.status_code}).")
     print("=" * 80)
 
     return UploadResult(
@@ -305,6 +324,7 @@ def push_with_existing_script(
     input_file: str,
     base_url: str,
     endpoint: str,
+    runupdate_endpoint: str,
     batch_size: int,
     timeout_seconds: int,
     retries: int,
@@ -318,6 +338,7 @@ def push_with_existing_script(
         excel_path=input_file,
         base_url=base_url,
         endpoint=endpoint,
+        runupdate_endpoint=runupdate_endpoint,
         sheet=None,
         batch_size=batch_size,
         timeout_seconds=timeout_seconds,
@@ -337,6 +358,11 @@ def main() -> None:
     parser.add_argument("--input", default=None, help="Path to merged Excel file")
     parser.add_argument("--base-url", default="https://192.168.80.74", help="Base URL")
     parser.add_argument("--endpoint", default="/api/ws/items", help="Endpoint path")
+    parser.add_argument(
+        "--runupdate-endpoint",
+        default="/api/ws/runupdate",
+        help="Endpoint path to trigger processing after upload",
+    )
     parser.add_argument("--batch-size", type=int, default=300, help="Rows per request")
     parser.add_argument("--timeout", type=int, default=120, help="Request timeout seconds")
     parser.add_argument("--retries", type=int, default=5, help="Retry count")
@@ -369,6 +395,7 @@ def main() -> None:
             input_file=input_file,
             base_url=args.base_url,
             endpoint=args.endpoint,
+            runupdate_endpoint=args.runupdate_endpoint,
             batch_size=args.batch_size,
             timeout_seconds=args.timeout,
             retries=args.retries,
@@ -385,6 +412,7 @@ def main() -> None:
                     f"Input file: {input_file}",
                     f"Base URL: {args.base_url}",
                     f"Endpoint: {args.endpoint}",
+                    f"Runupdate endpoint: {args.runupdate_endpoint}",
                 ]
             )
         )

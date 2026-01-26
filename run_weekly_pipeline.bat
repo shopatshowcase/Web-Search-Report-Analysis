@@ -1,6 +1,18 @@
 @echo off
 setlocal enabledelayedexpansion
 
+rem Load Google Chat webhook from .env if present
+set "WEBHOOK_URL="
+if exist "%~dp0.env" (
+    for /f "usebackq tokens=1,* delims==" %%A in ("%~dp0.env") do (
+        if /i "%%A"=="GOOGLE_CHAT_WEBHOOK_URL" set "WEBHOOK_URL=%%B"
+    )
+)
+
+rem Activate conda environment
+call "C:\Users\trendsscriptsuser1\AppData\Local\miniconda3\Scripts\conda.bat" activate web-search-report
+if %errorlevel% neq 0 call :fail "Conda activate failed" %errorlevel%
+
 rem Resolve automation directory (this .bat location)
 set "AUTOMATION_DIR=%~dp0"
 
@@ -20,33 +32,47 @@ echo ===========================================================================
 
 rem 1) Pull + filter last Monday
 python "%AUTOMATION_DIR%pull_and_filter_last_monday.py"
-if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 call :fail "Step 1 failed: pull_and_filter_last_monday.py" %errorlevel%
 
 rem 2) Split input
 python "%AUTOMATION_DIR%split_input_excel.py" --input "%INPUT_FILE%" --output-dir "%SPLIT_DIR%" --chunk-size 5
-if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 call :fail "Step 2 failed: split_input_excel.py" %errorlevel%
 
 rem 3) Assistant 1 (use dated folders)
 set "RUN_DATE=%RUN_DATE%"
 set "INPUT_FOLDER=%SPLIT_DIR%"
 set "OUTPUT_FOLDER=%A1_OUT%"
 python "%AUTOMATION_DIR%run_batch_assistant1.py"
-if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 call :fail "Step 3 failed: run_batch_assistant1.py" %errorlevel%
 
 rem 4) Assistant 2 (use dated folders)
 set "INPUT_FOLDER=%A1_OUT%"
 set "OUTPUT_FOLDER=%A2_OUT%"
 python "%AUTOMATION_DIR%run_batch_assistant2.py"
-if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 call :fail "Step 4 failed: run_batch_assistant2.py" %errorlevel%
 
 rem 5) Merge Assistant 2 outputs
 python "%AUTOMATION_DIR%merge_assistant2_output.py" --input-folder "%A2_OUT%" --output "%MERGED_FILE%"
-if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 call :fail "Step 5 failed: merge_assistant2_output.py" %errorlevel%
 
 rem 6) Push merged file
 python "%AUTOMATION_DIR%push_merged_items.py" --input "%MERGED_FILE%"
-if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 call :fail "Step 6 failed: push_merged_items.py" %errorlevel%
 
 echo ============================================================================
 echo Pipeline completed successfully.
 echo ============================================================================
+exit /b 0
+
+:fail
+set "ERR_MSG=%~1"
+set "ERR_CODE=%~2"
+echo [ERROR] %ERR_MSG% (exit code: %ERR_CODE%)
+if defined WEBHOOK_URL (
+    powershell -NoProfile -Command ^
+        "$u='%WEBHOOK_URL%'; $m='%ERR_MSG% (exit code: %ERR_CODE%)'; " ^
+        "$body=@{text=$m} | ConvertTo-Json -Compress; " ^
+        "Invoke-RestMethod -Method Post -Uri $u -Body $body -ContentType 'application/json' | Out-Null" ^
+        >nul 2>&1
+)
+exit /b %ERR_CODE%
