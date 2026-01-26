@@ -10,7 +10,7 @@ if exist "%~dp0.env" (
 )
 
 rem Activate conda environment
-call "C:\Users\trendsscriptsuser1\AppData\Local\miniconda3\Scripts\conda.bat" activate web-search-report
+call "C:\Users\trendsscriptsuser1\AppData\Local\miniconda3\condabin\conda.bat" activate web-search-report
 if %errorlevel% neq 0 call :fail "Conda activate failed" %errorlevel%
 
 rem Resolve automation directory (this .bat location)
