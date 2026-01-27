@@ -21,7 +21,7 @@ from chat_notifier import send_chat_message, format_batch_summary
 
 # Your message/instruction to the assistant
 USER_MESSAGE = """
-Check the attachment of Key words of web searches report. For each term, assign the most relevant Line item using fuzzy matching, ensuring that every Key Word receives a Line assignment. If you are not able to map a specific "Line" to an item, keep it blank. Once "Line" is mapped, you have to extract the exact item name from the Key words values. If key word value has only line name, keep the "Item" column blank. Else you have to extract the exact item name by removing the "Line" value from it. Then create an excel file which should have a "Key Word", "Line" and "Item" as columns and their respective data.
+Check the attachment of Key words of web searches report. For each term, assign the most relevant Line item using fuzzy matching, ensuring that every Key Word receives a Line assignment. If you are not able to map a specific "Line" to an item, keep it blank. Once "Line" is mapped, you have to extract the exact item name from the Key words values. If key word value has only line name, keep the "Item" column blank. Else you have to extract the exact item name by removing the "Line" value from it. Then create an excel file which should have a "Key Word", "Line" and "Item" as columns and their respective data. Make sure you ALWAYS provide an output excel file in the response for each request.
 """
 
 # Which assistant to use (assistant_1.json or assistant_2.json)
