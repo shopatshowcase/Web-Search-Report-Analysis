@@ -20,7 +20,7 @@ rem Calculate last Monday date (YYYY-MM-DD) - always previous week's Monday
 for /f %%i in ('powershell -NoProfile -Command "$d=Get-Date; $days=(([int]$d.DayOfWeek+6)%%7); if($days -eq 0){$days=7}; $m=$d.AddDays(-$days); $m.ToString('yyyy-MM-dd')"') do set "RUN_DATE=%%i"
 
 rem Define dated paths
-set "INPUT_FILE=%AUTOMATION_DIR%data\input\%RUN_DATE%\keywords_last_monday_%RUN_DATE%.xlsx"
+set "INPUT_FILE=%AUTOMATION_DIR%data\input\%RUN_DATE%\keywords_last_2_weeks_%RUN_DATE%.xlsx"
 set "SPLIT_DIR=%AUTOMATION_DIR%data\split\%RUN_DATE%"
 set "A1_OUT=%AUTOMATION_DIR%data\assistant1_output\%RUN_DATE%"
 set "A2_OUT=%AUTOMATION_DIR%data\assistant2_output\%RUN_DATE%"
@@ -30,7 +30,7 @@ echo ===========================================================================
 echo RUN DATE (last Monday): %RUN_DATE%
 echo ============================================================================
 
-rem 1) Pull + filter last Monday
+rem 1) Pull + filter last 2 weeks
 python "%AUTOMATION_DIR%pull_and_filter_last_monday.py"
 if %errorlevel% neq 0 call :fail "Step 1 failed: pull_and_filter_last_monday.py" %errorlevel%
 

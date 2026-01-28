@@ -1,12 +1,12 @@
 """
-Pull keywords from API and save only last Monday's rows to Excel.
+Pull keywords from API and save the last two weeks of rows to Excel.
 
 This script combines the get_keywords.py pull step and the
-last-Monday filter into a single run.
+last-two-weeks filter into a single run.
 
 Usage:
   python pull_and_filter_last_monday.py
-  python pull_and_filter_last_monday.py --output "C:/path/keywords_last_monday.xlsx"
+  python pull_and_filter_last_monday.py --output "C:/path/keywords_last_2_weeks.xlsx"
   python pull_and_filter_last_monday.py --url "https://host/api/ws/keywords"
 """
 from __future__ import annotations
@@ -96,12 +96,14 @@ def pull_and_filter_last_monday(
         raise SystemExit(f"[ERROR] Keyword column not found. Expected: {keyword_column}")
 
     parsed_dates = pd.to_datetime(df[date_col], errors="coerce").dt.date
-    target_date = last_monday()
-    filtered = df.loc[parsed_dates == target_date].copy()
+    end_date = last_monday()
+    start_date = end_date - timedelta(days=13)
+    mask = (parsed_dates >= start_date) & (parsed_dates <= end_date)
+    filtered = df.loc[mask].copy()
 
     if filtered.empty:
         raise SystemExit(
-            f"[ERROR] No rows found for last Monday ({target_date}). "
+            f"[ERROR] No rows found for the last 2 weeks ({start_date} to {end_date}). "
             f"Check the {date_col} values in the API response."
         )
 
@@ -109,23 +111,23 @@ def pull_and_filter_last_monday(
     if date_col in filtered.columns:
         filtered = filtered.drop(columns=[date_col])
 
-    default_dir = SCRIPT_DIR / "data" / "input" / target_date.strftime("%Y-%m-%d")
+    default_dir = SCRIPT_DIR / "data" / "input" / end_date.strftime("%Y-%m-%d")
 
     if output_path:
         out_file = Path(output_path).expanduser().resolve()
         if out_file.exists() and out_file.is_dir():
-            out_file = out_file / f"keywords_last_monday_{target_date}.xlsx"
+            out_file = out_file / f"keywords_last_2_weeks_{end_date}.xlsx"
     else:
-        out_file = default_dir / f"keywords_last_monday_{target_date}.xlsx"
+        out_file = default_dir / f"keywords_last_2_weeks_{end_date}.xlsx"
 
     out_file.parent.mkdir(parents=True, exist_ok=True)
     filtered.to_excel(out_file, index=False, sheet_name="Keywords")
 
     print("=" * 80)
-    print("PULL + LAST MONDAY FILTER COMPLETED")
+    print("PULL + LAST 2 WEEKS FILTER COMPLETED")
     print("=" * 80)
     print(f"Output file: {out_file}")
-    print(f"Target date (last Monday): {target_date}")
+    print(f"Date range: {start_date} to {end_date}")
     print(f"Total rows pulled: {len(df)}")
     print(f"Filtered rows: {len(filtered)}")
     print("=" * 80)
@@ -135,7 +137,7 @@ def pull_and_filter_last_monday(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Pull keywords from API and save only last Monday's rows to Excel."
+        description="Pull keywords from API and save last two weeks of rows to Excel."
     )
     parser.add_argument("--url", default=DEFAULT_URL, help="API URL for keywords")
     parser.add_argument("--output", default=None, help="Output Excel file or directory")
@@ -169,7 +171,7 @@ def main() -> None:
         send_chat_message(
             "\n".join(
                 [
-                    "Pull + filter completed",
+                    "Pull + filter completed (last 2 weeks)",
                     f"Output file: {output_file}",
                 ]
             )
