@@ -296,7 +296,7 @@ def push_items_from_excel(
     print("-" * 80)
     print(f"Triggering runupdate: {runupdate_url}")
     try:
-        runupdate_resp = session.put(
+        runupdate_resp = session.post(
             runupdate_url, headers=headers, verify=False, timeout=timeout_seconds
         )
     except requests.exceptions.RequestException as e:
