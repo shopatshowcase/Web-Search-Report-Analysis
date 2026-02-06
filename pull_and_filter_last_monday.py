@@ -1,11 +1,12 @@
 """
-Pull keywords from API and save the last two weeks of rows to Excel.
+Pull keywords from API and save the last N weeks of rows to Excel.
 
-This script combines the get_keywords.py pull step and the
-last-two-weeks filter into a single run.
+This script combines the get_keywords.py pull step and a
+last-N-weeks filter into a single run.
 
 Usage:
   python pull_and_filter_last_monday.py
+  python pull_and_filter_last_monday.py --weeks 2
   python pull_and_filter_last_monday.py --output "C:/path/keywords_last_2_weeks.xlsx"
   python pull_and_filter_last_monday.py --url "https://host/api/ws/keywords"
 """
@@ -82,6 +83,7 @@ def pull_and_filter_last_monday(
     output_path: Optional[str] = None,
     date_column: str = "DDate",
     keyword_column: str = "KeyWord",
+    weeks: int = 1,
 ) -> Path:
     df = pull_keywords(url)
     if df.empty:
@@ -96,14 +98,18 @@ def pull_and_filter_last_monday(
         raise SystemExit(f"[ERROR] Keyword column not found. Expected: {keyword_column}")
 
     parsed_dates = pd.to_datetime(df[date_col], errors="coerce").dt.date
+    if weeks not in (1, 2):
+        raise SystemExit("[ERROR] weeks must be 1 or 2.")
+
     end_date = last_monday()
-    start_date = end_date - timedelta(days=13)
+    start_date = end_date - timedelta(days=(weeks * 7 - 1))
     mask = (parsed_dates >= start_date) & (parsed_dates <= end_date)
     filtered = df.loc[mask].copy()
 
     if filtered.empty:
+        label = "last 1 week" if weeks == 1 else "last 2 weeks"
         raise SystemExit(
-            f"[ERROR] No rows found for the last 2 weeks ({start_date} to {end_date}). "
+            f"[ERROR] No rows found for {label} ({start_date} to {end_date}). "
             f"Check the {date_col} values in the API response."
         )
 
@@ -116,15 +122,22 @@ def pull_and_filter_last_monday(
     if output_path:
         out_file = Path(output_path).expanduser().resolve()
         if out_file.exists() and out_file.is_dir():
-            out_file = out_file / f"keywords_last_2_weeks_{end_date}.xlsx"
+            if weeks == 1:
+                out_file = out_file / f"keywords_last_1_week_{end_date}.xlsx"
+            else:
+                out_file = out_file / f"keywords_last_2_weeks_{end_date}.xlsx"
     else:
-        out_file = default_dir / f"keywords_last_2_weeks_{end_date}.xlsx"
+        if weeks == 1:
+            out_file = default_dir / f"keywords_last_1_week_{end_date}.xlsx"
+        else:
+            out_file = default_dir / f"keywords_last_2_weeks_{end_date}.xlsx"
 
     out_file.parent.mkdir(parents=True, exist_ok=True)
     filtered.to_excel(out_file, index=False, sheet_name="Keywords")
 
     print("=" * 80)
-    print("PULL + LAST 2 WEEKS FILTER COMPLETED")
+    label = "LAST 1 WEEK" if weeks == 1 else "LAST 2 WEEKS"
+    print(f"PULL + {label} FILTER COMPLETED")
     print("=" * 80)
     print(f"Output file: {out_file}")
     print(f"Date range: {start_date} to {end_date}")
@@ -137,7 +150,7 @@ def pull_and_filter_last_monday(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Pull keywords from API and save last two weeks of rows to Excel."
+        description="Pull keywords from API and save last N weeks of rows to Excel."
     )
     parser.add_argument("--url", default=DEFAULT_URL, help="API URL for keywords")
     parser.add_argument("--output", default=None, help="Output Excel file or directory")
@@ -150,6 +163,12 @@ def main() -> None:
         "--keyword-column",
         default="KeyWord",
         help='Keyword column name (default: "KeyWord")',
+    )
+    parser.add_argument(
+        "--weeks",
+        type=int,
+        default=1,
+        help="Number of weeks to include (1 or 2). Default: 1",
     )
     args = parser.parse_args()
 
@@ -167,11 +186,12 @@ def main() -> None:
             output_path=args.output,
             date_column=args.date_column,
             keyword_column=args.keyword_column,
+            weeks=args.weeks,
         )
         send_chat_message(
             "\n".join(
                 [
-                    "Pull + filter completed (last 2 weeks)",
+                    f"Pull + filter completed (last {args.weeks} week{'s' if args.weeks == 2 else ''})",
                     f"Output file: {output_file}",
                 ]
             )
